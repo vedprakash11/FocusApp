@@ -51,7 +51,7 @@
     <string name="streak_days">%1$d days</string>
     <string name="time_min">%1$d min</string>
     <string name="time_h_min">%1$dh %2$d min</string>
-    <string name="smart_recommendations_based_on_usage">Smart recommendations based on your usage</string>
+    <string name="smart_recommendations_based_on_usage">Smart recommendations based on your usage patterns</string>
     <string name="daily_focus_time">Daily focus time (last 7 days)</string>
     <string name="apply_recommendation">Apply</string>
 </resources>

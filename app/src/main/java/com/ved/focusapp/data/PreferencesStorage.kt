@@ -135,6 +135,49 @@ class PreferencesStorage(context: Context) {
         }
     }
 
+    // ---------- Break adaptation (rule-based: skip rate, resume-late rate) ----------
+    /** Record break outcome: true = skipped (reset during break), false = completed. */
+    fun addBreakOutcome(skipped: Boolean) {
+        val list = getBreakOutcomes().toMutableList().apply { add(skipped) }
+        val trimmed = if (list.size > MAX_BREAK_OUTCOMES) list.takeLast(MAX_BREAK_OUTCOMES) else list
+        prefs.edit().putString(KEY_BREAK_OUTCOMES, trimmed.joinToString(",") { if (it) "1" else "0" }).apply()
+    }
+
+    fun getBreakOutcomes(): List<Boolean> {
+        val raw = prefs.getString(KEY_BREAK_OUTCOMES, null) ?: return emptyList()
+        return raw.split(",").map { it == "1" }.takeLast(MAX_BREAK_OUTCOMES)
+    }
+
+    /** Break skip rate (skipped / total) in [0,1]. Returns null if no data. */
+    fun getBreakSkipRate(): Float? {
+        val list = getBreakOutcomes()
+        if (list.isEmpty()) return null
+        return list.count { it }.toFloat() / list.size
+    }
+
+    /** Record resume late: true = user resumed focus after break ended with delay. */
+    fun addResumeLateOutcome(late: Boolean) {
+        val list = getResumeLateOutcomes().toMutableList().apply { add(late) }
+        val trimmed = if (list.size > MAX_BREAK_OUTCOMES) list.takeLast(MAX_BREAK_OUTCOMES) else list
+        prefs.edit().putString(KEY_RESUME_LATE_OUTCOMES, trimmed.joinToString(",") { if (it) "1" else "0" }).apply()
+    }
+
+    fun getResumeLateOutcomes(): List<Boolean> {
+        val raw = prefs.getString(KEY_RESUME_LATE_OUTCOMES, null) ?: return emptyList()
+        return raw.split(",").map { it == "1" }.takeLast(MAX_BREAK_OUTCOMES)
+    }
+
+    fun getResumeLateRate(): Float? {
+        val list = getResumeLateOutcomes()
+        if (list.isEmpty()) return null
+        return list.count { it }.toFloat() / list.size
+    }
+
+    /** When break timer completes, set this so we can detect "resume late" when user next starts focus. */
+    var breakEndedAtMillis: Long
+        get() = prefs.getLong(KEY_BREAK_ENDED_AT_MILLIS, 0L)
+        set(value) = prefs.edit().putLong(KEY_BREAK_ENDED_AT_MILLIS, value).apply()
+
     fun todayKey(): String = dateFormat.format(Date())
 
     // ---------- Keys ----------
@@ -157,6 +200,10 @@ class PreferencesStorage(context: Context) {
         private const val KEY_DAILY_MINUTES_PREFIX = "daily_minutes_"
         private const val KEY_SESSIONS_THIS_ROUND = "sessions_this_round"
         private const val KEY_RECENT_FOCUS_SESSIONS = "recent_focus_sessions"
+        private const val KEY_BREAK_OUTCOMES = "break_outcomes"
+        private const val KEY_RESUME_LATE_OUTCOMES = "resume_late_outcomes"
+        private const val KEY_BREAK_ENDED_AT_MILLIS = "break_ended_at_millis"
+        private const val MAX_BREAK_OUTCOMES = 20
 
         private const val DEFAULT_FOCUS_MINUTES = 25
         private const val DEFAULT_SHORT_BREAK_MINUTES = 5

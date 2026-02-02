@@ -89,6 +89,9 @@ class TimerStateHolder(
         if (completedPhase.isFocus) {
             recordFocusCompletion(endTimeMillis)
             dndHelper.restoreDndOnFocusEnd()
+        } else if (completedPhase == TimerPhase.ShortBreak || completedPhase == TimerPhase.LongBreak) {
+            storage.addBreakOutcome(false)
+            storage.breakEndedAtMillis = System.currentTimeMillis()
         }
         playSessionEndFeedback()
         when (completedPhase) {
@@ -175,14 +178,22 @@ class TimerStateHolder(
 
     fun startPhase(targetPhase: TimerPhase) {
         if (targetPhase == TimerPhase.Idle) return
+        if (targetPhase == TimerPhase.Focus) {
+            val breakEndedAt = storage.breakEndedAtMillis
+            if (breakEndedAt > 0) {
+                val elapsed = System.currentTimeMillis() - breakEndedAt
+                if (elapsed <= 24 * 60 * 60 * 1000L) {
+                    storage.addResumeLateOutcome(elapsed > 60_000)
+                }
+                storage.breakEndedAtMillis = 0
+            }
+            dndHelper.enableDndOnFocusStart()
+        }
         val durationMs = when (targetPhase) {
             TimerPhase.Focus -> storage.focusMinutes * 60_000L
             TimerPhase.ShortBreak -> storage.shortBreakMinutes * 60_000L
             TimerPhase.LongBreak -> storage.longBreakMinutes * 60_000L
             else -> return
-        }
-        if (targetPhase == TimerPhase.Focus) {
-            dndHelper.enableDndOnFocusStart()
         }
         val endTime = System.currentTimeMillis() + durationMs
         storage.persistTimerState(targetPhase, endTime, true)
@@ -247,7 +258,6 @@ class TimerStateHolder(
         alarmScheduler.cancelCompletion()
         if (p.isFocus) {
             dndHelper.restoreDndOnFocusEnd()
-            // Record stopped-early focus session for smart recommendations
             val durationMs = getPhaseDurationMs(TimerPhase.Focus)
             val startTime = endTime - durationMs
             val elapsedMinutes = ((System.currentTimeMillis() - startTime) / 60_000).toInt().coerceIn(0, 60)
@@ -258,6 +268,8 @@ class TimerStateHolder(
                     completed = false
                 )
             )
+        } else if (p == TimerPhase.ShortBreak || p == TimerPhase.LongBreak) {
+            storage.addBreakOutcome(true)
         }
         storage.clearTimerState()
         _phase.value = TimerPhase.Idle

@@ -41,7 +41,8 @@ fun StatsScreen(
     var streak by remember { mutableStateOf(0) }
     var recommendation by remember { mutableStateOf<FocusRecommendation?>(null) }
     var last7DaysData by remember { mutableStateOf<List<DayData>>(emptyList()) }
-    var recommendationApplied by remember { mutableStateOf(false) }
+    var focusRecommendationApplied by remember { mutableStateOf(false) }
+    var breakRecommendationApplied by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         totalSessions = storage.totalSessions
@@ -49,8 +50,11 @@ fun StatsScreen(
         todayMinutes = storage.getDailyMinutes(today)
         streak = computeStreak(storage, today)
         recommendation = FocusRecommendationEngine.recommend(
-            storage.getRecentFocusSessions(),
-            storage.focusMinutes
+            recentSessions = storage.getRecentFocusSessions(),
+            currentFocusMinutes = storage.focusMinutes,
+            breakSkipRate = storage.getBreakSkipRate(),
+            resumeLateRate = storage.getResumeLateRate(),
+            currentShortBreakMinutes = storage.shortBreakMinutes
         )
         last7DaysData = buildLast7DaysData(storage, today)
     }
@@ -79,12 +83,23 @@ fun StatsScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    if (!recommendationApplied && recommendation!!.recommendedFocusMinutes != storage.focusMinutes) {
+                    val focusDiff = recommendation!!.recommendedFocusMinutes != storage.focusMinutes
+                    val breakRec = recommendation!!.recommendedShortBreakMinutes
+                    val breakDiff = breakRec != null && breakRec != storage.shortBreakMinutes
+                    if ((!focusRecommendationApplied && focusDiff) || (!breakRecommendationApplied && breakDiff)) {
                         Spacer(modifier = Modifier.height(8.dp))
                         androidx.compose.material3.TextButton(
                             onClick = {
-                                storage.focusMinutes = recommendation!!.recommendedFocusMinutes
-                                recommendationApplied = true
+                                if (!focusRecommendationApplied && focusDiff) {
+                                    storage.focusMinutes = recommendation!!.recommendedFocusMinutes
+                                    focusRecommendationApplied = true
+                                }
+                                if (!breakRecommendationApplied && breakDiff) {
+                                    recommendation!!.recommendedShortBreakMinutes?.let {
+                                        storage.shortBreakMinutes = it
+                                        breakRecommendationApplied = true
+                                    }
+                                }
                             }
                         ) {
                             Text(
