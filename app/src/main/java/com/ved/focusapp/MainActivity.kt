@@ -27,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.ved.focusapp.ui.FocusAppNav
 import com.ved.focusapp.ui.splash.SplashScreen
-import com.google.android.gms.ads.MobileAds
 import com.ved.focusapp.ui.theme.FocusAppTheme
 import kotlinx.coroutines.delay
 
@@ -47,7 +46,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        MobileAds.initialize(this) { }
 
         val app = applicationContext
         storage = PreferencesStorage(app)

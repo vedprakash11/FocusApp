@@ -9,15 +9,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import com.ved.focusapp.ads.AdBanner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -55,33 +52,20 @@ fun FocusAppNav(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+        NavHost(
+            navController = navController,
+            startDestination = ROUTE_HOME,
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
         ) {
-            NavHost(
-                navController = navController,
-                startDestination = ROUTE_HOME,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                composable(ROUTE_HOME) {
-                    HomeScreen(viewModel = viewModel)
-                }
-                composable(ROUTE_SETTINGS) {
-                    SettingsScreen(storage = storage)
-                }
-                composable(ROUTE_STATS) {
-                    StatsScreen(storage = storage)
-                }
+            composable(ROUTE_HOME) {
+                HomeScreen(viewModel = viewModel)
             }
-            AdBanner(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            )
+            composable(ROUTE_SETTINGS) {
+                SettingsScreen(storage = storage)
+            }
+            composable(ROUTE_STATS) {
+                StatsScreen(storage = storage)
+            }
         }
     }
 }
