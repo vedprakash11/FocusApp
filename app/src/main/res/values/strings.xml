@@ -1,0 +1,57 @@
+<resources>
+    <string name="app_name">Focus Timer</string>
+
+    <!-- AdMob: Replace with your real ad unit ID for production. Test ID below. -->
+    <string name="ad_unit_id_banner" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Focus Timer</string>
+    <string name="notification_channel_desc">Timer and break reminders</string>
+    <string name="notification_focus_ended_title">Focus ended</string>
+    <string name="notification_focus_ended_body">Time for a break.</string>
+    <string name="notification_break_ended_title">Break ended</string>
+    <string name="notification_break_ended_body">Ready for another focus session?</string>
+
+    <!-- Home -->
+    <string name="phase_ready">Ready</string>
+    <string name="phase_focus">Focus</string>
+    <string name="phase_short_break">Short break</string>
+    <string name="phase_long_break">Long break</string>
+    <string name="sessions_this_round">%1$d of 4 sessions this round</string>
+    <string name="btn_focus_min">Focus (%1$d min)</string>
+    <string name="btn_short_break_min">Short break (%1$d min)</string>
+    <string name="btn_long_break_min">Long break (%1$d min)</string>
+    <string name="btn_pause">Pause</string>
+    <string name="btn_resume">Resume</string>
+    <string name="btn_reset">Reset</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="timer_minutes">Timer (minutes)</string>
+    <string name="focus_minutes">Focus</string>
+    <string name="short_break_minutes">Short break</string>
+    <string name="long_break_minutes">Long break</string>
+    <string name="behaviour">Behaviour</string>
+    <string name="auto_start_next">Auto-start next session</string>
+    <string name="sound_haptics">Sound &amp; haptics</string>
+    <string name="sound">Sound</string>
+    <string name="vibration">Vibration</string>
+
+    <!-- Do Not Disturb -->
+    <string name="do_not_disturb">Do Not Disturb</string>
+    <string name="dnd_description">During focus sessions, the app turns on Do Not Disturb on your phone. When the focus timer stops (or you pause/reset), it turns DND off. Grant access below to enable.</string>
+    <string name="dnd_open_settings">Open DND access settings</string>
+    <string name="dnd_access_granted">DND access granted</string>
+
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="privacy_policy_text">This app works offline. No personal data is collected or sent. All data stays on your device.</string>
+
+    <!-- Stats -->
+    <string name="stats_title">Stats</string>
+    <string name="total_focus_sessions">Total focus sessions</string>
+    <string name="todays_focus_time">Today\'s focus time</string>
+    <string name="current_streak">Current streak</string>
+    <string name="streak_days">%1$d days</string>
+    <string name="time_min">%1$d min</string>
+    <string name="time_h_min">%1$dh %2$d min</string>
+</resources>
