@@ -2,6 +2,8 @@ package com.ved.focusapp.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import org.json.JSONArray
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -97,6 +99,42 @@ class PreferencesStorage(context: Context) {
         prefs.edit().putInt(KEY_SESSIONS_THIS_ROUND, 0).apply()
     }
 
+    // ---------- Recent sessions (for smart recommendations) ----------
+    private val maxRecentSessions = 30
+
+    /** Append a focus session record; keep only the last [maxRecentSessions] entries. */
+    fun addFocusSessionRecord(record: SessionRecord) {
+        val list = getRecentFocusSessions().toMutableList().apply { add(record) }
+        val trimmed = if (list.size > maxRecentSessions) list.takeLast(maxRecentSessions) else list
+        val json = JSONArray()
+        trimmed.forEach { r ->
+            json.put(JSONObject().apply {
+                put("t", r.timestampMillis)
+                put("d", r.durationMinutes)
+                put("c", r.completed)
+            })
+        }
+        prefs.edit().putString(KEY_RECENT_FOCUS_SESSIONS, json.toString()).apply()
+    }
+
+    /** Last N focus sessions (newest last). */
+    fun getRecentFocusSessions(): List<SessionRecord> {
+        val raw = prefs.getString(KEY_RECENT_FOCUS_SESSIONS, null) ?: return emptyList()
+        return try {
+            val arr = JSONArray(raw)
+            (0 until arr.length()).map { i ->
+                val o = arr.getJSONObject(i)
+                SessionRecord(
+                    timestampMillis = o.getLong("t"),
+                    durationMinutes = o.optInt("d", 25),
+                    completed = o.optBoolean("c", true)
+                )
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     fun todayKey(): String = dateFormat.format(Date())
 
     // ---------- Keys ----------
@@ -118,6 +156,7 @@ class PreferencesStorage(context: Context) {
         private const val KEY_LAST_COMPLETION_DATE = "last_completion_date"
         private const val KEY_DAILY_MINUTES_PREFIX = "daily_minutes_"
         private const val KEY_SESSIONS_THIS_ROUND = "sessions_this_round"
+        private const val KEY_RECENT_FOCUS_SESSIONS = "recent_focus_sessions"
 
         private const val DEFAULT_FOCUS_MINUTES = 25
         private const val DEFAULT_SHORT_BREAK_MINUTES = 5

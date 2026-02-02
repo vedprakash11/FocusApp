@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.ved.focusapp.data.PreferencesStorage
+import com.ved.focusapp.data.SessionRecord
 import com.ved.focusapp.data.TimerPhase
 import com.ved.focusapp.dnd.DndHelper
 import com.ved.focusapp.notification.NotificationHelper
@@ -124,6 +125,14 @@ class TimerStateHolder(
         storage.addDailyMinutes(today, durationMinutes)
         storage.lastCompletionDate = today
         storage.incrementSessionsThisRound()
+        // For smart recommendations: completed focus session
+        storage.addFocusSessionRecord(
+            SessionRecord(
+                timestampMillis = System.currentTimeMillis(),
+                durationMinutes = durationMinutes,
+                completed = true
+            )
+        )
     }
 
     private fun getPhaseDurationMs(phase: TimerPhase): Long {
@@ -233,9 +242,23 @@ class TimerStateHolder(
 
     fun reset() {
         val p = _phase.value
+        val endTime = storage.timerEndTimeMillis
         engine.stopTicking()
         alarmScheduler.cancelCompletion()
-        if (p.isFocus) dndHelper.restoreDndOnFocusEnd()
+        if (p.isFocus) {
+            dndHelper.restoreDndOnFocusEnd()
+            // Record stopped-early focus session for smart recommendations
+            val durationMs = getPhaseDurationMs(TimerPhase.Focus)
+            val startTime = endTime - durationMs
+            val elapsedMinutes = ((System.currentTimeMillis() - startTime) / 60_000).toInt().coerceIn(0, 60)
+            storage.addFocusSessionRecord(
+                SessionRecord(
+                    timestampMillis = System.currentTimeMillis(),
+                    durationMinutes = elapsedMinutes,
+                    completed = false
+                )
+            )
+        }
         storage.clearTimerState()
         _phase.value = TimerPhase.Idle
         _remainingSeconds.value = 0
@@ -243,6 +266,10 @@ class TimerStateHolder(
         _sessionsThisRound.value = storage.getSessionsThisRound()
     }
 
+    /**
+     * Lifecycle: onPause — stop tick only; state (phase, endTime, wasRunning) stays persisted.
+     * Timer survives backgrounding; remaining time is recalculated from endTime on resume.
+     */
     fun onAppPause() {
         if (_isRunning.value) {
             engine.stopTicking()
@@ -250,6 +277,10 @@ class TimerStateHolder(
         }
     }
 
+    /**
+     * Lifecycle: onResume — restore from storage; recalculate remaining from endTime.
+     * If remaining <= 0, run session-end logic; if remaining > 0, show paused (user taps Resume).
+     */
     fun onAppResume() {
         restoreFromStorage(triggerCompletionIfExpired = true)
     }

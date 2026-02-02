@@ -9,6 +9,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import com.ved.focusapp.data.PreferencesStorage
+import com.ved.focusapp.data.SessionRecord
 import com.ved.focusapp.data.TimerPhase
 import com.ved.focusapp.dnd.DndHelper
 import com.ved.focusapp.notification.NotificationHelper
@@ -53,6 +54,13 @@ class TimerCompletionReceiver : BroadcastReceiver() {
         storage.addDailyMinutes(today, durationMinutes)
         storage.lastCompletionDate = today
         storage.incrementSessionsThisRound()
+        storage.addFocusSessionRecord(
+            SessionRecord(
+                timestampMillis = System.currentTimeMillis(),
+                durationMinutes = durationMinutes,
+                completed = true
+            )
+        )
     }
 
     private fun playSessionEndFeedback(context: Context, storage: PreferencesStorage) {
